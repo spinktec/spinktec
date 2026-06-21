@@ -11,6 +11,8 @@ interface Props {
   pluralityWinners: number[];
   roundIndex: number;
   dimmed: boolean;
+  // 0 → 1 ballot-counting progress, shared across all method panels.
+  progress: number;
 }
 
 function sameSet(a: number[], b: number[]): boolean {
@@ -19,7 +21,8 @@ function sameSet(a: number[], b: number[]): boolean {
   return b.every((x) => s.has(x));
 }
 
-export function MethodPanel({ result, candidates, tokens, pluralityWinners, roundIndex, dimmed }: Props) {
+export function MethodPanel({ result, candidates, tokens, pluralityWinners, roundIndex, dimmed, progress }: Props) {
+  const counting = progress < 1;
   const stepped = result.rounds && result.rounds.length > 0;
 
   let scores: Record<number, number>;
@@ -56,22 +59,28 @@ export function MethodPanel({ result, candidates, tokens, pluralityWinners, roun
         </p>
       </header>
 
-      <div className="flex flex-wrap gap-1">
-        {result.winners.map((id) => {
-          const c = candidates.find((cand) => cand.id === id);
-          return (
-            <span
-              key={id}
-              className="rounded-full px-2 py-0.5 text-xs font-semibold"
-              style={{ background: (c?.color ?? tokens.accent) + '33', color: tokens.text }}
-            >
-              🏆 {nameOf(id)}
-            </span>
-          );
-        })}
+      <div className="flex min-h-[1.5rem] flex-wrap items-center gap-1">
+        {counting ? (
+          <span className="text-xs font-semibold" style={{ color: tokens.textDim }}>
+            <span className="inline-block animate-pulse">●</span> Counting ballots…
+          </span>
+        ) : (
+          result.winners.map((id) => {
+            const c = candidates.find((cand) => cand.id === id);
+            return (
+              <span
+                key={id}
+                className="rounded-full px-2 py-0.5 text-xs font-semibold"
+                style={{ background: (c?.color ?? tokens.accent) + '33', color: tokens.text }}
+              >
+                🏆 {nameOf(id)}
+              </span>
+            );
+          })
+        )}
       </div>
 
-      <VoteChart candidates={candidates} scores={scores} winners={winners} tokens={tokens} />
+      <VoteChart candidates={candidates} scores={scores} winners={winners} tokens={tokens} progress={progress} />
 
       {result.method === 'condorcet' && result.matrix && (
         <CondorcetMatrix candidates={candidates} matrix={result.matrix} tokens={tokens} />

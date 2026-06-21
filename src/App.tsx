@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTheme } from './hooks/useTheme';
 import { useElection } from './hooks/useElection';
+import { useTally } from './hooks/useTally';
 import { SCENARIOS } from './scenarios/presets';
 import { ThemeToggle } from './components/ThemeToggle';
 import { PoliticalCompass } from './components/PoliticalCompass';
@@ -16,6 +17,10 @@ export default function App() {
   const { settings, updateSettings, resetSettings, result, stats, round, setRound, maxRound, generate } =
     useElection();
   const [advancedOpen, setAdvancedOpen] = useState(false);
+
+  // Animate vote tallies on every new election and every round step, so the
+  // count comes in over time rather than appearing instantly.
+  const { progress: tallyProgress, counting } = useTally(`${stats.total}-${round}`);
 
   // Run an election on first mount.
   useEffect(() => {
@@ -49,7 +54,8 @@ export default function App() {
   }, [result]);
 
   const isStepping = Boolean(stepped?.rounds && round < maxRound);
-  const showVerdict = !stepped || round >= maxRound;
+  // Hold the verdict until the count finishes, so the final call lands last.
+  const showVerdict = (!stepped || round >= maxRound) && !counting;
 
   return (
     <div className="min-h-full" style={{ background: tokens.bg, color: tokens.text }}>
@@ -60,8 +66,14 @@ export default function App() {
             <h1 className="text-lg font-bold sm:text-2xl" style={{ color: tokens.text }}>
               Electoral Systems Simulator
             </h1>
-            <p className="text-xs" style={{ color: tokens.textDim }}>
-              {stats.total} elections run · {stats.agreed} agreed · {stats.differed} differed
+            <p className="text-xs" style={{ color: counting ? tokens.accent : tokens.textDim }}>
+              {counting ? (
+                <span>
+                  <span className="inline-block animate-pulse">●</span> Counting votes…
+                </span>
+              ) : (
+                `${stats.total} elections run · ${stats.agreed} agreed · ${stats.differed} differed`
+              )}
             </p>
           </div>
           <ThemeToggle preference={preference} tokens={tokens} onCycle={cycle} />
@@ -163,6 +175,7 @@ export default function App() {
                   pluralityWinners={pluralityWinners}
                   roundIndex={Math.min(round, maxRound)}
                   dimmed={isStepping && r.method !== 'stv' && r.method !== 'irv'}
+                  progress={tallyProgress}
                 />
               ))}
             </div>

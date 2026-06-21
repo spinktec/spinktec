@@ -3,7 +3,9 @@
     "allow": [
       "PowerShell(npm *)",
       "PowerShell(npm run *)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)"
     ]
   }
 }
