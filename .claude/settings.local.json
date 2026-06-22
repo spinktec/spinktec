@@ -4,8 +4,8 @@
       "PowerShell(npm *)",
       "PowerShell(npm run *)",
       "PowerShell(Stop-Process *)",
-      "Bash(npx tsc *)",
-      "Bash(npm run *)"
+      "Bash(curl -s -o /dev/null -w \"Assets at /assets/ root: HTTP %{http_code}\\\\n\" https://spinktec.github.io/assets/index-DYww870z.js)",
+      "Bash(curl -s -o /dev/null -w \"Assets at /spinktec/assets/: HTTP %{http_code}\\\\n\" https://spinktec.github.io/spinktec/assets/index-DYww870z.js)"
     ]
   }
 }
