@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { VotingMethod } from '../types';
 import type { ThemeTokens } from '../theme';
 import { CANDIDATE_COLORS } from '../theme';
-import { METHOD_LABELS } from '../constants';
+import { METHOD_DESCRIPTIONS, METHOD_LABELS } from '../constants';
 
 interface Props {
   methods: VotingMethod[];
@@ -123,7 +123,9 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
           {ballots.map((b, bi) => (
             <div
               key={b.method}
-              className="rounded-xl border p-3 shadow-lg transition-all duration-300 ease-out"
+              tabIndex={0}
+              aria-describedby={`ballot-tip-${b.method}`}
+              className="group relative rounded-xl border p-3 shadow-lg transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2"
               style={{
                 background: tokens.surface,
                 borderColor: tokens.border,
@@ -132,17 +134,37 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
                 transitionDelay: `${bi * 70}ms`,
               }}
             >
-              <div className="mb-1 flex items-baseline justify-between">
+              <div className="mb-1 flex items-baseline justify-between gap-2">
                 <span
                   className="text-[10px] font-bold uppercase tracking-wider"
                   style={{ color: tokens.textDim }}
                 >
                   Official Ballot
                 </span>
-                <span className="text-xs font-bold" style={{ color: tokens.accent }}>
+                <span className="flex items-center gap-1 text-xs font-bold" style={{ color: tokens.accent }}>
                   {METHOD_LABELS[b.method]}
+                  <span
+                    aria-hidden
+                    className="flex h-4 w-4 items-center justify-center rounded-full border text-[9px]"
+                    style={{ borderColor: tokens.accent }}
+                  >
+                    i
+                  </span>
                 </span>
               </div>
+
+              {/* Hover/focus balloon: explains this method's rules. */}
+              <span
+                id={`ballot-tip-${b.method}`}
+                role="tooltip"
+                className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 w-60 -translate-x-1/2 rounded-lg border p-2 text-xs leading-snug opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                style={{ background: tokens.bg, borderColor: tokens.border, color: tokens.textDim }}
+              >
+                <span className="mb-0.5 block font-semibold" style={{ color: tokens.text }}>
+                  {METHOD_LABELS[b.method]}
+                </span>
+                {METHOD_DESCRIPTIONS[b.method]}
+              </span>
               <p className="mb-2 text-[11px] italic" style={{ color: tokens.textDim }}>
                 {b.instruction}
               </p>
