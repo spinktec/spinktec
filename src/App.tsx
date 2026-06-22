@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTheme } from './hooks/useTheme';
 import { useElection } from './hooks/useElection';
 import { useTally } from './hooks/useTally';
+import { BallotOverlay } from './components/BallotOverlay';
 import { SCENARIOS } from './scenarios/presets';
 import { ThemeToggle } from './components/ThemeToggle';
 import { PoliticalCompass } from './components/PoliticalCompass';
@@ -17,14 +18,22 @@ export default function App() {
   const { settings, updateSettings, resetSettings, result, stats, round, setRound, maxRound, generate } =
     useElection();
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [ballotsOpen, setBallotsOpen] = useState(false);
 
   // Animate vote tallies on every new election and every round step, so the
   // count comes in over time rather than appearing instantly.
   const { progress: tallyProgress, counting } = useTally(`${stats.total}-${round}`);
 
-  // Run an election on first mount.
-  useEffect(() => {
+  // Begin an election: voters fill their ballots first, then the count runs.
+  const startElection = useCallback(() => setBallotsOpen(true), []);
+  const finishBallots = useCallback(() => {
+    setBallotsOpen(false);
     generate();
+  }, [generate]);
+
+  // Kick off the first election on mount.
+  useEffect(() => {
+    startElection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -124,8 +133,9 @@ export default function App() {
 
         <button
           type="button"
-          onClick={generate}
-          className="h-11 w-full rounded-lg px-4 text-sm font-bold focus:outline-none focus-visible:ring-2 sm:w-auto sm:self-start"
+          onClick={startElection}
+          disabled={ballotsOpen}
+          className="h-11 w-full rounded-lg px-4 text-sm font-bold focus:outline-none focus-visible:ring-2 disabled:opacity-50 sm:w-auto sm:self-start"
           style={{ background: tokens.accent, color: tokens.bg }}
         >
           ⟳ Generate Election
@@ -183,9 +193,18 @@ export default function App() {
         )}
 
         {result && showVerdict && (
-          <VerdictPanel result={result} tokens={tokens} stats={stats} onRunAnother={generate} />
+          <VerdictPanel result={result} tokens={tokens} stats={stats} onRunAnother={startElection} />
         )}
       </div>
+
+      {ballotsOpen && (
+        <BallotOverlay
+          methods={settings.activeMethods}
+          candidateCount={settings.candidateCount}
+          tokens={tokens}
+          onDone={finishBallots}
+        />
+      )}
     </div>
   );
 }
