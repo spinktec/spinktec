@@ -20,12 +20,27 @@ export default function App() {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [ballotsOpen, setBallotsOpen] = useState(false);
 
+  // Whether starting an election returns to the ballot-casting page first
+  // (default) or jumps straight to the simulation. Persisted across sessions.
+  const [showBallotStage, setShowBallotStage] = useState<boolean>(() => {
+    const stored =
+      typeof window !== 'undefined' ? window.localStorage.getItem('showBallotStage') : null;
+    return stored === null ? true : stored === 'true';
+  });
+  useEffect(() => {
+    window.localStorage.setItem('showBallotStage', String(showBallotStage));
+  }, [showBallotStage]);
+
   // Animate vote tallies on every new election and every round step, so the
   // count comes in over time rather than appearing instantly.
   const { progress: tallyProgress, counting } = useTally(`${stats.total}-${round}`);
 
-  // Begin an election: voters fill their ballots first, then the count runs.
-  const startElection = useCallback(() => setBallotsOpen(true), []);
+  // Begin an election: either return to the ballot-casting page first, or
+  // generate results directly, per the user's persisted choice.
+  const startElection = useCallback(() => {
+    if (showBallotStage) setBallotsOpen(true);
+    else generate();
+  }, [showBallotStage, generate]);
   const finishBallots = useCallback(() => {
     setBallotsOpen(false);
     generate();
@@ -131,15 +146,28 @@ export default function App() {
           })}
         </div>
 
-        <button
-          type="button"
-          onClick={startElection}
-          disabled={ballotsOpen}
-          className="h-11 w-full rounded-lg px-4 text-sm font-bold focus:outline-none focus-visible:ring-2 disabled:opacity-50 sm:w-auto sm:self-start"
-          style={{ background: tokens.accent, color: tokens.bg }}
-        >
-          ⟳ Generate Election
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={startElection}
+            disabled={ballotsOpen}
+            className="h-11 w-full rounded-lg px-4 text-sm font-bold focus:outline-none focus-visible:ring-2 disabled:opacity-50 sm:w-auto"
+            style={{ background: tokens.accent, color: tokens.bg }}
+          >
+            ⟳ Generate Election
+          </button>
+
+          <label className="flex cursor-pointer items-center gap-2 text-xs sm:text-sm" style={{ color: tokens.textDim }}>
+            <input
+              type="checkbox"
+              checked={showBallotStage}
+              onChange={(e) => setShowBallotStage(e.target.checked)}
+              className="h-4 w-4 cursor-pointer accent-current focus:outline-none focus-visible:ring-2"
+              style={{ accentColor: tokens.accent }}
+            />
+            Start at the ballot-casting page
+          </label>
+        </div>
 
         <AdvancedOptions
           settings={settings}
