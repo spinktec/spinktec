@@ -31,8 +31,10 @@ interface Ballot {
   steps: number; // number of marks to reveal
 }
 
-const STEP_MS = 260;
-const SETTLE_MS = 850;
+// Marking pace, slowed by 200% (3×) so the ballot-casting animation is easy to
+// follow before the "Ballots complete" state appears.
+const STEP_MS = 780;
+const SETTLE_MS = 2550;
 
 function shuffle(n: number): number[] {
   const a = Array.from({ length: n }, (_, i) => i);
@@ -68,20 +70,28 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
   const ballots = useMemo(() => methods.map((m) => buildBallot(m, rows)), [methods, rows]);
   const maxSteps = useMemo(() => ballots.reduce((m, b) => Math.max(m, b.steps), 1), [ballots]);
 
+  // 'intro'  → opening message + start button, no ballots yet
+  // 'marking'→ ballots appear and are filled out
+  // 'done'   → marking finished, results button shown
+  const [phase, setPhase] = useState<'intro' | 'marking' | 'done'>('intro');
   const [step, setStep] = useState(0);
   const [shown, setShown] = useState(false);
-  // Marking is finished; show the button that reveals the results.
-  const [done, setDone] = useState(false);
+  const done = phase === 'done';
+
+  // Begin generating/filling the ballots once the voter heads to the polls.
+  const goToPolls = (): void => setPhase('marking');
 
   useEffect(() => {
+    if (phase !== 'marking') return;
+
     const reduce =
       typeof window !== 'undefined' &&
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (reduce) {
-      // Show the completed ballots and the button immediately.
+      // Show the completed ballots and the results button immediately.
       setShown(true);
       setStep(maxSteps);
-      setDone(true);
+      setPhase('done');
       return;
     }
 
@@ -93,7 +103,7 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
       setStep(s);
       if (s >= maxSteps) {
         window.clearInterval(id);
-        window.setTimeout(() => setDone(true), SETTLE_MS);
+        window.setTimeout(() => setPhase('done'), SETTLE_MS);
       }
     }, STEP_MS);
 
@@ -101,7 +111,7 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
       cancelAnimationFrame(raf);
       window.clearInterval(id);
     };
-  }, [maxSteps]);
+  }, [phase, maxSteps]);
 
   const letter = (i: number): string => String.fromCharCode(65 + i);
 
@@ -114,11 +124,39 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
     >
       <div className="flex w-full max-w-[1000px] flex-col gap-4">
         <h2 className="text-center text-sm font-bold sm:text-base" style={{ color: tokens.text }}>
-          {done
-            ? '✅ Ballots complete — the count is ready'
-            : '✍️ A voter fills out a ballot for each voting method…'}
+          {phase === 'intro' && '🗳️ A voter fills out a ballot for each voting method'}
+          {phase === 'marking' && '✍️ Marking the ballots…'}
+          {phase === 'done' && '✅ Ballots complete — the count is ready'}
         </h2>
 
+        {phase === 'intro' && (
+          <div className="flex flex-col items-center gap-4">
+            <p
+              className="max-w-2xl text-center text-xs leading-relaxed sm:text-sm"
+              style={{ color: tokens.textDim }}
+            >
+              Even in a system where each person casts a single vote, there is no one
+              “right” way to turn those votes into winners. The same ballots can be
+              counted by several different voting methods — plurality, ranked-choice,
+              approval, and more — and each method prioritizes a different reading of
+              the voters’ intent: a candidate’s most passionate supporters, the
+              broadest acceptable consensus, or the choice that would beat every rival
+              head-to-head. Pick a scenario and watch how the method you choose can
+              change who wins, even when nobody’s vote changes.
+            </p>
+            <button
+              type="button"
+              onClick={goToPolls}
+              autoFocus
+              className="h-11 rounded-lg px-6 text-sm font-bold focus:outline-none focus-visible:ring-2"
+              style={{ background: tokens.accent, color: tokens.bg }}
+            >
+              Let's go to the polling stations and vote →
+            </button>
+          </div>
+        )}
+
+        {phase !== 'intro' && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {ballots.map((b, bi) => (
             <div
@@ -206,6 +244,7 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
             </div>
           ))}
         </div>
+        )}
 
         <div className="flex min-h-[2.75rem] justify-center">
           {done && (
