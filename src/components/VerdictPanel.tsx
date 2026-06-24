@@ -30,7 +30,7 @@ export function VerdictPanel({ result, tokens, stats, onRunAnother }: Props) {
         Verdict
       </h2>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 sm:grid-cols-3">
         {result.results.map((r) => (
           <div key={r.method}>
             <div className="text-xs font-semibold" style={{ color: tokens.textDim }}>
@@ -68,14 +68,14 @@ export function VerdictPanel({ result, tokens, stats, onRunAnother }: Props) {
           : 'The methods disagreed. Candidates marked ◆ were elected by some methods but not all — a sign that vote-splitting, proportionality, or centrist appeal changed who won.'}
       </p>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-xs" style={{ color: tokens.textDim }}>
           {stats.total} elections run · {stats.differed} produced different winners across methods.
         </span>
         <button
           type="button"
           onClick={onRunAnother}
-          className="h-11 rounded-lg px-4 text-sm font-semibold focus:outline-none focus-visible:ring-2"
+          className="h-11 w-full shrink-0 rounded-lg px-4 text-sm font-semibold focus:outline-none focus-visible:ring-2 sm:w-auto"
           style={{ background: tokens.accent, color: tokens.bg }}
         >
           Run Another Election

@@ -117,12 +117,12 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-3 backdrop-blur-sm sm:items-center sm:p-4"
       style={{ background: tokens.bg + 'E6' }}
       role="status"
       aria-label="Voters are filling out their ballots"
     >
-      <div className="flex w-full max-w-[1000px] flex-col gap-4">
+      <div className="my-auto flex w-full max-w-[1000px] flex-col gap-4 py-4">
         <h2 className="text-center text-sm font-bold sm:text-base" style={{ color: tokens.text }}>
           {phase === 'intro' && '🗳️ A voter fills out a ballot for each voting method'}
           {phase === 'marking' && '✍️ Marking the ballots…'}
@@ -148,7 +148,7 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
               type="button"
               onClick={goToPolls}
               autoFocus
-              className="h-11 rounded-lg px-6 text-sm font-bold focus:outline-none focus-visible:ring-2"
+              className="min-h-11 w-full max-w-sm rounded-lg px-6 py-2 text-center text-sm font-bold leading-tight focus:outline-none focus-visible:ring-2 sm:w-auto"
               style={{ background: tokens.accent, color: tokens.bg }}
             >
               Let's go to the polling stations and vote →
@@ -195,7 +195,7 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
               <span
                 id={`ballot-tip-${b.method}`}
                 role="tooltip"
-                className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 w-60 -translate-x-1/2 rounded-lg border p-2 text-xs leading-snug opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 w-60 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border p-2 text-xs leading-snug opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
                 style={{ background: tokens.bg, borderColor: tokens.border, color: tokens.textDim }}
               >
                 <span className="mb-0.5 block font-semibold" style={{ color: tokens.text }}>
@@ -246,13 +246,13 @@ export function BallotOverlay({ methods, candidateCount, tokens, onDone }: Props
         </div>
         )}
 
-        <div className="flex min-h-[2.75rem] justify-center">
+        <div className="flex min-h-[2.75rem] justify-center px-3">
           {done && (
             <button
               type="button"
               onClick={onDone}
               autoFocus
-              className="h-11 rounded-lg px-6 text-sm font-bold transition-opacity focus:outline-none focus-visible:ring-2"
+              className="min-h-11 w-full max-w-sm rounded-lg px-6 py-2 text-center text-sm font-bold leading-tight transition-opacity focus:outline-none focus-visible:ring-2 sm:w-auto"
               style={{ background: tokens.accent, color: tokens.bg }}
             >
               View Election Results →

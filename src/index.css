@@ -11,4 +11,7 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Prevent stray horizontal scroll from absolutely-positioned tooltips/
+     animations spilling past the viewport on small screens. */
+  overflow-x: hidden;
 }
